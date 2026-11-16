@@ -14,8 +14,8 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <title>Haushaltsbuch</title>
 <style>
-:root{--page:#f9f9f7;--surface:#fcfcfb;--ink:#0b0b0b;--ink2:#52514e;--line:#e4e3de;--chip:#efeeea;--s1:#2a78d6;--s2:#eb6834;--bad:#d03b3b;--accent:#2a78d6}
-@media(prefers-color-scheme:dark){:root{--page:#0d0d0d;--surface:#1a1a19;--ink:#f0efec;--ink2:#c3c2b7;--line:#2e2e2b;--chip:#272725;--s1:#3987e5;--s2:#d95926;--bad:#e66767;--accent:#3987e5}}
+:root{--page:#f9f9f7;--surface:#fcfcfb;--ink:#0b0b0b;--ink2:#52514e;--line:#e4e3de;--chip:#efeeea;--s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--bad:#d03b3b;--accent:#2a78d6}
+@media(prefers-color-scheme:dark){:root{--page:#0d0d0d;--surface:#1a1a19;--ink:#f0efec;--ink2:#c3c2b7;--line:#2e2e2b;--chip:#272725;--s1:#3987e5;--s2:#d95926;--s3:#199e70;--bad:#e66767;--accent:#3987e5}}
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--page);color:var(--ink);font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-tap-highlight-color:transparent}
@@ -43,13 +43,14 @@ nav .add span,nav .lg{display:none}
 .month b{min-width:170px;text-align:center;font-size:17px}
 .kpis{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
 .kpi{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 16px;min-width:0}
-.kpi.big{grid-column:1/-1}
+.kpi.big,.kpi.full{grid-column:1/-1}
+.kpi em{font-style:normal;font-size:13px;color:var(--ink2);margin-left:8px;font-weight:400}
 .kpi small{display:block;color:var(--ink2);font-size:13px}
 .kpi b{font-size:21px;font-variant-numeric:tabular-nums;white-space:nowrap}
 .kpi.big b{font-size:32px}
 .neg{color:var(--bad)}
 .sw{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px}
-.b1{background:var(--s1)}.b2{background:var(--s2)}
+.b1{background:var(--s1)}.b2{background:var(--s2)}.b3{background:var(--s3)}
 .kat{display:block;width:100%;text-align:left;padding:7px 0}
 .kat-h{display:flex;justify-content:space-between;gap:12px;font-size:14px;margin-bottom:5px}
 .kat-h span:last-child{color:var(--ink2);font-variant-numeric:tabular-nums;white-space:nowrap}
@@ -60,7 +61,7 @@ nav .add span,nav .lg{display:none}
 .col{flex:1;min-width:0;border-radius:8px 8px 0 0;display:flex}
 .col:hover,.col.sel{background:var(--chip)}
 .bars{display:flex;align-items:flex-end;justify-content:center;gap:2px;width:100%;height:100%}
-.bars i{width:36%;max-width:12px;border-radius:4px 4px 0 0}
+.bars i{width:26%;max-width:10px;border-radius:4px 4px 0 0}
 .lbls{display:flex;gap:2px}
 .lbls span{flex:1;text-align:center;font-size:10px;color:var(--ink2);padding-top:4px;overflow:hidden}
 .lbls .sel{color:var(--ink);font-weight:600}
@@ -120,9 +121,10 @@ input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid 
  nav .add:hover{background:var(--accent)}
  nav .add span,nav .lg{display:inline}
  nav .sm{display:none}
- .kpis{grid-template-columns:1.3fr 1fr 1fr}
- .kpis.duo{grid-template-columns:1fr 1fr}
- .kpi.big{grid-column:auto}
+ .kpis{grid-template-columns:1.2fr 1fr 1fr 1fr}
+ .kpis.duo{grid-template-columns:1fr 1fr 1fr}
+ .kpi.big,.kpi.full{grid-column:auto}
+ .kpi em{display:block;margin:0}
  .kpi b,.kpi.big b{font-size:28px}
  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
  .trend{height:220px}
@@ -139,7 +141,10 @@ input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid 
 const DEFAULT_REPO = 'lennart02-07/Haushaltsbuch';
 const DEF_CFG = { version: 1, kategorien: {
   ausgabe: ['Wohnen', 'Lebensmittel', 'Mobilität', 'Restaurant', 'Freizeit', 'Shopping', 'Abos', 'Versicherungen', 'Gesundheit', 'Reisen', 'Sonstiges'],
-  einnahme: ['Gehalt', 'Erstattung', 'Geschenk', 'Sonstiges'] } };
+  einnahme: ['Gehalt', 'Erstattung', 'Geschenk', 'Sonstiges'],
+  sparen: ['Tagesgeld', 'Depot'] } };
+const TYPEN = [['ausgabe', 'Ausgabe'], ['einnahme', 'Einnahme'], ['sparen', 'Sparen']];
+const DOT = { einnahme: 'b1', ausgabe: 'b2', sparen: 'b3' };
 const INTERVALLE = { woche: 'wöchentlich', '2wochen': 'alle 2 Wochen', monat: 'monatlich', quartal: 'vierteljährlich', halbjahr: 'halbjährlich', jahr: 'jährlich' };
 const PRO_MONAT = { woche: 52 / 12, '2wochen': 26 / 12, monat: 1, quartal: 1 / 3, halbjahr: 1 / 6, jahr: 1 / 12 };
 const MON = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
@@ -162,11 +167,11 @@ const ymLabel = ym => new Date(ym + '-01T12:00').toLocaleDateString('de-DE', { m
 const dLabel = s => new Date(s + 'T12:00').toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'short' });
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 const fmtIn = n => Number(n).toFixed(2).replace('.', ',');
-function parseAmt(s) {
-  s = String(s).trim().replace(/[€\s]/g, '');
+function parseAmt(s, neg) {
+  s = String(s).trim().replace(/[€\s]/g, '').replace('−', '-');
   if (s.includes(',')) s = s.replace(/\./g, '').replace(',', '.');
   const n = Number(s);
-  return s && isFinite(n) && n > 0 ? Math.round(n * 100) / 100 : NaN;
+  return s && isFinite(n) && (n > 0 || (neg && n < 0)) ? Math.round(n * 100) / 100 : NaN;
 }
 const LS = {
   get(k, d) { try { const v = localStorage.getItem('hb_' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
@@ -185,6 +190,9 @@ const S = {
 const F = { q: '', kat: '' };
 let sheet = null;
 const saveCache = () => { LS.set('months', S.months); LS.set('index', S.index); };
+const kats = t => S.cfg.kategorien[t] || DEF_CFG.kategorien[t] || [];
+// Vorzeichen in Listen: Einnahme +, Ausgabe −, Sparen ohne (negativ = Entnahme)
+const amt = b => (b.typ === 'einnahme' ? '+' : b.typ === 'ausgabe' ? '−' : '') + eur(b.betrag);
 const mlist = ym => (S.months[ym] || { list: [] }).list;
 const sorted = l => [...l].sort((a, b) => b.datum.localeCompare(a.datum) || String(b.erstellt || '').localeCompare(String(a.erstellt || '')));
 
@@ -300,12 +308,13 @@ async function online(fn, ok) {
 
 // ---------- Auswertung ----------
 function sums(list) {
-  let ein = 0, aus = 0; const kat = {};
+  let ein = 0, aus = 0, spar = 0; const kat = {};
   for (const b of list) {
     if (b.typ === 'einnahme') ein += b.betrag;
+    else if (b.typ === 'sparen') spar += b.betrag;
     else { aus += b.betrag; kat[b.kategorie] = (kat[b.kategorie] || 0) + b.betrag; }
   }
-  return { ein, aus, kat };
+  return { ein, aus, spar, kat };
 }
 function nextDue(r) {
   const t = today(), s = new Date(r.start + 'T12:00');
@@ -348,25 +357,26 @@ function renderStatus() {
   $('#syncbtn').classList.toggle('spin', S.busy > 0);
 }
 const monthHtml = () => `<div class="month"><button class="ib" data-act="month" data-v="-1" aria-label="Vorheriger Monat">${ic('left')}</button><b>${ymLabel(S.ym)}</b><button class="ib" data-act="month" data-v="1" aria-label="Nächster Monat">${ic('right')}</button></div>`;
-const rowHtml = (b, withDate) => `<button class="row" data-act="edit" data-v="${esc(b.id)}"><i class="dot ${b.typ === 'einnahme' ? 'b1' : 'b2'}"></i><span class="m"><b>${esc(b.notiz || b.kategorie)}</b><small>${withDate ? dLabel(b.datum) + ' · ' : ''}${esc(b.kategorie)}${b.dauer ? ' · Dauerauftrag' : ''}</small></span><span class="amt">${b.typ === 'einnahme' ? '+' : '−'}${eur(b.betrag)}</span></button>`;
+const rowHtml = (b, withDate) => `<button class="row" data-act="edit" data-v="${esc(b.id)}"><i class="dot ${DOT[b.typ] || 'b2'}"></i><span class="m"><b>${esc(b.notiz || b.kategorie)}</b><small>${withDate ? dLabel(b.datum) + ' · ' : ''}${b.typ === 'sparen' ? (b.betrag < 0 ? 'Entnahme · ' : 'Sparen · ') : ''}${esc(b.kategorie)}${b.dauer ? ' · Dauerauftrag' : ''}</small></span><span class="amt">${amt(b)}</span></button>`;
 
 function vDash() {
-  const list = mlist(S.ym), s = sums(list), saldo = s.ein - s.aus;
+  const list = mlist(S.ym), s = sums(list), saldo = s.ein - s.aus - s.spar;
   const kats = Object.entries(s.kat).sort((a, b) => b[1] - a[1]);
   const now = ymOf(today()), tr = Array.from({ length: 12 }, (_, i) => { const ym = ymAdd(now, i - 11); return Object.assign({ ym }, sums(mlist(ym))); });
-  const tmax = Math.max(1, ...tr.map(t => Math.max(t.ein, t.aus))), h = v => (v / tmax * 100).toFixed(1) + '%';
+  const tmax = Math.max(1, ...tr.map(t => Math.max(t.ein, t.aus, t.spar))), h = v => (v / tmax * 100).toFixed(1) + '%';
   return `${monthHtml()}
 <div class="kpis">
- <div class="kpi big"><small>Saldo</small><b class="${saldo < 0 ? 'neg' : ''}">${eur(saldo)}</b></div>
+ <div class="kpi big"><small>Übrig</small><b class="${saldo < 0 ? 'neg' : ''}">${eur(saldo)}</b></div>
  <div class="kpi"><small><i class="sw b1"></i>Einnahmen</small><b>${eur(s.ein)}</b></div>
  <div class="kpi"><small><i class="sw b2"></i>Ausgaben</small><b>${eur(s.aus)}</b></div>
+ <div class="kpi full"><small><i class="sw b3"></i>Gespart</small><b>${eur(s.spar)}</b>${s.ein > 0 ? `<em>Sparquote ${Math.round(s.spar / s.ein * 100)} %</em>` : ''}</div>
 </div>
 <div class="grid">
 <section class="card"><h2>Ausgaben nach Kategorie</h2>${kats.length ? kats.map(([k, v]) => `<button class="kat" data-act="katf" data-v="${esc(k)}" title="Buchungen in ${esc(k)} anzeigen"><span class="kat-h"><span>${esc(k)}</span><span>${eur(v)} · ${Math.round(v / s.aus * 100)} %</span></span><span class="track"><i style="width:${(v / kats[0][1] * 100).toFixed(1)}%"></i></span></button>`).join('') : '<p class="empty">Noch keine Ausgaben in diesem Monat.</p>'}</section>
 <section class="card"><h2>Letzte 12 Monate</h2>
- <div class="trend"><span class="max">${eur(tmax).replace(/,\d\d/, '')}</span>${tr.map(t => `<button class="col${t.ym === S.ym ? ' sel' : ''}" data-act="ym" data-v="${t.ym}" title="${ymLabel(t.ym)}: Einnahmen ${eur(t.ein)}, Ausgaben ${eur(t.aus)}" aria-label="${ymLabel(t.ym)}: Einnahmen ${eur(t.ein)}, Ausgaben ${eur(t.aus)}"><span class="bars"><i class="b1" style="height:${h(t.ein)}"></i><i class="b2" style="height:${h(t.aus)}"></i></span></button>`).join('')}</div>
+ <div class="trend"><span class="max">${eur(tmax).replace(/,\d\d/, '')}</span>${tr.map(t => `<button class="col${t.ym === S.ym ? ' sel' : ''}" data-act="ym" data-v="${t.ym}" title="${ymLabel(t.ym)}: Einnahmen ${eur(t.ein)}, Ausgaben ${eur(t.aus)}, gespart ${eur(t.spar)}" aria-label="${ymLabel(t.ym)}: Einnahmen ${eur(t.ein)}, Ausgaben ${eur(t.aus)}, gespart ${eur(t.spar)}"><span class="bars"><i class="b1" style="height:${h(t.ein)}"></i><i class="b2" style="height:${h(t.aus)}"></i><i class="b3" style="height:${h(Math.max(0, t.spar))}"></i></span></button>`).join('')}</div>
  <div class="lbls">${tr.map(t => `<span class="${t.ym === S.ym ? 'sel' : ''}">${MON[+t.ym.slice(5) - 1]}</span>`).join('')}</div>
- <div class="legend"><span><i class="sw b1"></i>Einnahmen</span><span><i class="sw b2"></i>Ausgaben</span></div>
+ <div class="legend"><span><i class="sw b1"></i>Einnahmen</span><span><i class="sw b2"></i>Ausgaben</span><span><i class="sw b3"></i>Gespart</span></div>
 </section>
 </div>
 <section class="card"><h2>Letzte Buchungen</h2>${list.length ? sorted(list).slice(0, 8).map(b => rowHtml(b, true)).join('') + '<button class="link" data-act="view" data-v="list">Alle Buchungen</button>' : '<p class="empty">Noch keine Buchungen in diesem Monat. Über „+“ legst du die erste an.</p>'}</section>`;
@@ -382,7 +392,7 @@ function listRows() {
   const l = sorted(mlist(S.ym)).filter(b => (!F.kat || b.kategorie === F.kat) && (!q || ((b.notiz || '') + ' ' + b.kategorie).toLowerCase().includes(q)));
   if (!l.length) return '<p class="empty">Keine Buchungen.</p>';
   const dsum = {}; let out = '', day = '';
-  l.forEach(b => { dsum[b.datum] = (dsum[b.datum] || 0) + (b.typ === 'einnahme' ? b.betrag : -b.betrag); });
+  l.forEach(b => { if (b.typ !== 'sparen') dsum[b.datum] = (dsum[b.datum] || 0) + (b.typ === 'einnahme' ? b.betrag : -b.betrag); });
   for (const b of l) {
     if (b.datum !== day) { day = b.datum; out += `<div class="day"><span>${dLabel(day)}</span><span>${eur(dsum[day])}</span></div>`; }
     out += rowHtml(b);
@@ -394,16 +404,18 @@ function vDauer() {
   return `<div class="kpis duo">
  <div class="kpi"><small><i class="sw b1"></i>Feste Einnahmen / Monat</small><b>${eur(fix('einnahme'))}</b></div>
  <div class="kpi"><small><i class="sw b2"></i>Feste Ausgaben / Monat</small><b>${eur(fix('ausgabe'))}</b></div>
+ <div class="kpi full"><small><i class="sw b3"></i>Festes Sparen / Monat</small><b>${eur(fix('sparen'))}</b></div>
 </div>
-<section class="card"><h2>Daueraufträge</h2>${S.dauer.length ? S.dauer.map(r => { const n = nextDue(r); return `<button class="row" data-act="dedit" data-v="${esc(r.id)}"><i class="dot ${r.typ === 'einnahme' ? 'b1' : 'b2'}"></i><span class="m"><b>${esc(r.name)}</b><small>${INTERVALLE[r.intervall] || ''} · ${r.aktiv === false ? 'pausiert' : n ? 'nächste Buchung ' + dLabel(n) : 'beendet'}</small></span><span class="amt">${r.typ === 'einnahme' ? '+' : '−'}${eur(r.betrag)}</span></button>`; }).join('') : '<p class="empty">Noch keine Daueraufträge. Miete, Gehalt oder Abos werden damit automatisch gebucht.</p>'}
+<section class="card"><h2>Daueraufträge</h2>${S.dauer.length ? S.dauer.map(r => { const n = nextDue(r); return `<button class="row" data-act="dedit" data-v="${esc(r.id)}"><i class="dot ${DOT[r.typ] || 'b2'}"></i><span class="m"><b>${esc(r.name)}</b><small>${INTERVALLE[r.intervall] || ''} · ${r.aktiv === false ? 'pausiert' : n ? 'nächste Buchung ' + dLabel(n) : 'beendet'}</small></span><span class="amt">${amt(r)}</span></button>`; }).join('') : '<p class="empty">Noch keine Daueraufträge. Miete, Gehalt oder Abos werden damit automatisch gebucht.</p>'}
 <button class="btn pri wide" data-act="dnew">Dauerauftrag anlegen</button></section>`;
 }
 function vSet() {
-  const kl = t => `<div class="chips">${S.cfg.kategorien[t].map(n => `<span class="chip">${esc(n)}<button data-act="katDel" data-v="${esc(n)}" data-t="${t}" aria-label="${esc(n)} entfernen">×</button></span>`).join('')}</div>
+  const kl = t => `<div class="chips">${kats(t).map(n => `<span class="chip">${esc(n)}<button data-act="katDel" data-v="${esc(n)}" data-t="${t}" aria-label="${esc(n)} entfernen">×</button></span>`).join('')}</div>
 <form data-form="kat" data-t="${t}" class="inline"><input type="text" name="n" placeholder="Neue Kategorie" maxlength="30" aria-label="Neue Kategorie" required><button class="btn">Hinzufügen</button></form>`;
   const q = S.queue.length;
   return `<section class="card"><h2>Kategorien für Ausgaben</h2>${kl('ausgabe')}</section>
 <section class="card"><h2>Kategorien für Einnahmen</h2>${kl('einnahme')}</section>
+<section class="card"><h2>Sparziele</h2>${kl('sparen')}</section>
 <section class="card"><h2>Daten</h2><button class="btn wide" data-act="csv">Alle Buchungen als CSV exportieren</button>${q ? `<p class="hint">${q} ${q === 1 ? 'Änderung wartet' : 'Änderungen warten'} auf Übertragung.</p><button class="btn del wide" data-act="dropQueue">Wartende Änderungen verwerfen</button>` : ''}</section>
 <section class="card"><h2>Verbindung</h2><p class="hint">Repo: ${esc(S.repo)}</p><div class="acts"><button class="btn" data-act="token">Token ändern</button><button class="btn del" data-act="logout">Abmelden</button></div></section>`;
 }
@@ -422,18 +434,19 @@ function showSheet(html) {
   el.classList.add('open');
 }
 function closeSheet() { sheet = null; const el = $('#sheet'); el.classList.remove('open'); el.innerHTML = ''; }
-const segHtml = () => `<div class="seg">${[['ausgabe', 'Ausgabe'], ['einnahme', 'Einnahme']].map(([v, l]) => `<button type="button" data-act="typ" data-v="${v}" class="${sheet.typ === v ? 'on' : ''}">${l}</button>`).join('')}</div>`;
+const segHtml = () => `<div class="seg">${TYPEN.map(([v, l]) => `<button type="button" data-act="typ" data-v="${v}" class="${sheet.typ === v ? 'on' : ''}">${l}</button>`).join('')}</div>`;
 function chipsHtml() {
-  const l = [...S.cfg.kategorien[sheet.typ]];
+  const l = [...kats(sheet.typ)];
   if (sheet.kat && !l.includes(sheet.kat)) l.push(sheet.kat);
   return l.map(k => `<button type="button" class="chip${k === sheet.kat ? ' on' : ''}" data-act="kat" data-v="${esc(k)}">${esc(k)}</button>`).join('');
 }
-const lastKat = t => { const k = LS.get('kat_' + t, null); return S.cfg.kategorien[t].includes(k) ? k : null; };
+const lastKat = t => { const k = LS.get('kat_' + t, null); return kats(t).includes(k) ? k : null; };
 function openB(o) {
   const b = o || { typ: 'ausgabe', datum: S.ym === ymOf(today()) ? today() : S.ym + '-01' };
   sheet = { kind: 'b', orig: o, typ: b.typ, kat: b.kategorie || lastKat(b.typ) };
   showSheet(`<form data-form="b"><h2>${o ? 'Buchung bearbeiten' : 'Neue Buchung'}</h2><div id="f-seg">${segHtml()}</div>
 <input type="text" id="f-betrag" inputmode="decimal" placeholder="0,00" autocomplete="off" aria-label="Betrag in Euro" value="${o ? fmtIn(o.betrag) : ''}">
+<p class="hint" id="f-hint"${b.typ === 'sparen' ? '' : ' hidden'}>Geld, das du weglegst. Für eine Entnahme ein Minus vor den Betrag setzen.</p>
 <label>Kategorie</label><div class="chips" id="f-kat">${chipsHtml()}</div>
 <div class="two"><div><label for="f-datum">Datum</label><input type="date" id="f-datum" value="${esc(b.datum)}" required></div><div><label for="f-notiz">Notiz (optional)</label><input type="text" id="f-notiz" maxlength="80" value="${esc(b.notiz || '')}" autocomplete="off"></div></div>
 <div class="acts">${o ? '<button type="button" class="btn del" data-act="delB">Löschen</button>' : ''}<button type="button" class="btn" data-act="close">Abbrechen</button><button class="btn pri">Speichern</button></div></form>`);
@@ -453,7 +466,7 @@ ${o ? '' : '<p class="hint">Liegt die erste Buchung in der Vergangenheit, werden
 }
 const FORM = {
   b() {
-    const o = sheet.orig, betrag = parseAmt($('#f-betrag').value), datum = $('#f-datum').value;
+    const o = sheet.orig, betrag = parseAmt($('#f-betrag').value, sheet.typ === 'sparen'), datum = $('#f-datum').value;
     if (isNaN(betrag)) { toast('Bitte einen Betrag eingeben'); $('#f-betrag').focus(); return; }
     if (!sheet.kat) return toast('Bitte eine Kategorie wählen');
     if (!/^\d{4}-\d{2}-\d{2}$/.test(datum)) return toast('Bitte ein Datum wählen');
@@ -482,7 +495,7 @@ const FORM = {
   kat(f) {
     const t = f.dataset.t, n = f.elements.n.value.trim();
     if (!n) return;
-    if (S.cfg.kategorien[t].some(k => k.toLowerCase() === n.toLowerCase())) return toast('Diese Kategorie gibt es schon');
+    if (kats(t).some(k => k.toLowerCase() === n.toLowerCase())) return toast('Diese Kategorie gibt es schon');
     saveKats(t, l => [...l, n]);
   },
   async setup() {
@@ -498,7 +511,7 @@ const FORM = {
   }
 };
 const saveKats = (t, fn) => online(async () => {
-  S.cfg = (await mutate('config.json', DEF_CFG, c => Object.assign({}, c, { kategorien: Object.assign({}, c.kategorien, { [t]: fn(c.kategorien[t] || []) }) }), 'Kategorien geändert')).data;
+  S.cfg = (await mutate('config.json', DEF_CFG, c => Object.assign({}, c, { kategorien: Object.assign({}, c.kategorien, { [t]: fn(c.kategorien[t] || DEF_CFG.kategorien[t] || []) }) }), 'Kategorien geändert')).data;
   LS.set('cfg', S.cfg);
 });
 async function exportCsv() {
@@ -507,7 +520,7 @@ async function exportCsv() {
   const safe = s => /^[=+\-@]/.test(s) ? "'" + s : s;
   const rows = [['Datum', 'Typ', 'Kategorie', 'Betrag', 'Notiz']];
   for (const ym of yms) for (const b of sorted(mlist(ym)).reverse())
-    rows.push([b.datum, b.typ === 'einnahme' ? 'Einnahme' : 'Ausgabe', safe(b.kategorie), fmtIn(b.typ === 'einnahme' ? b.betrag : -b.betrag), safe(b.notiz || '')]);
+    rows.push([b.datum, { einnahme: 'Einnahme', sparen: 'Sparen' }[b.typ] || 'Ausgabe', safe(b.kategorie), fmtIn(b.typ === 'einnahme' ? b.betrag : -b.betrag), safe(b.notiz || '')]);
   const text = '﻿' + rows.map(r => r.map(c => /[";\r\n]/.test(c) ? '"' + c.replace(/"/g, '""') + '"' : c).join(';')).join('\r\n');
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([text], { type: 'text/csv;charset=utf-8' }));
@@ -531,7 +544,7 @@ const ACT = {
   new() { openB(); },
   edit(v) { const b = mlist(S.ym).find(x => x.id === v); if (b) openB(b); },
   close() { closeSheet(); },
-  typ(v) { sheet.typ = v; sheet.kat = sheet.kind === 'b' ? lastKat(v) : null; $('#f-seg').innerHTML = segHtml(); $('#f-kat').innerHTML = chipsHtml(); },
+  typ(v) { sheet.typ = v; sheet.kat = sheet.kind === 'b' ? lastKat(v) : null; $('#f-seg').innerHTML = segHtml(); $('#f-kat').innerHTML = chipsHtml(); const hi = $('#f-hint'); if (hi) hi.hidden = v !== 'sparen'; },
   kat(v) { sheet.kat = v; $('#f-kat').innerHTML = chipsHtml(); },
   delB() { const o = sheet.orig; if (!confirm('Diese Buchung löschen?')) return; closeSheet(); enqueue({ t: 'del', ym: ymOf(o.datum), id: o.id }); toast('Gelöscht'); },
   dnew() { openD(); },
